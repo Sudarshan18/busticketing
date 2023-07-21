@@ -1,0 +1,141 @@
+{% extends 'base_nav.html' %}
+{% block maincontent %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Matching Buses</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0bbae6;
+      font-size: 2em;
+      margin-top: 20px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 90%;
+      margin: 0 auto;
+      margin-top: 20px;
+      margin-bottom: 40px;
+    }
+
+    th {
+      background-color: #0bbae6;
+      color: white;
+      padding: 12px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .bus-image {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+    }
+
+    .button {
+      background-color: #0bbae6;
+      color: white;
+      width: 70px;
+      height: 40px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .button:hover {
+      background-color: #ff8c00;
+    }
+
+    .no-buses {
+      text-align: center;
+      margin-top: 40px;
+      font-style: italic;
+    }
+  </style>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      var table = document.getElementById("bus-table");
+      var rows = table.rows;
+      var headerCells = table.getElementsByTagName("th");
+
+      for (var i = 0; i < headerCells.length; i++) {
+        headerCells[i].addEventListener("click", function() {
+          var headerIndex = Array.prototype.indexOf.call(headerCells, this);
+          sortTable(headerIndex);
+        });
+      }
+
+      function sortTable(columnIndex) {
+        var rowsArray = Array.prototype.slice.call(rows, 1); // Convert rows into an array (excluding the header row)
+        var ascending = true;
+
+        rowsArray.sort(function(rowA, rowB) {
+          var cellA = rowA.cells[columnIndex].textContent.toLowerCase();
+          var cellB = rowB.cells[columnIndex].textContent.toLowerCase();
+
+          if (columnIndex === 3) { // Price column
+            var priceA = parseInt(cellA.replace("Rs.", "").trim());
+            var priceB = parseInt(cellB.replace("Rs.", "").trim());
+            return ascending ? priceA - priceB : priceB - priceA;
+          }
+
+          return ascending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+        });
+
+        for (var j = 0; j < rowsArray.length; j++) {
+          table.tBodies[0].appendChild(rowsArray[j]); // Re-append the sorted rows to the table
+        }
+
+        ascending = !ascending;
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <h1>Matching Buses</h1>
+  {% if matching_buses %}
+  <table id="bus-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Departure Time</th>
+        <th>Price</th>
+        <th>Feature</th>
+        <th>Image</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for bus in matching_buses|dictsort:'price' %}
+      <tr>
+        <td data-url="customerPage/seat.html">{{ bus.name }}</td>
+        <td>{{ bus.departure_time }}</td>
+        <td>Rs.{{ bus.price }}</td>
+        <td>{{ bus.features }}</td>
+        <td><img src="{{ bus.image.url }}" alt="{{ bus.image.name }}" class="bus-image"></td>
+        <td>
+          <a href="{% url 'Bus:seats' pk=bus.pk %}"><button class="button">Book</button></a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="no-buses">No matching buses found.</p>
+  {% endif %}
+</body>
+</html>
+{% endblock maincontent %}
